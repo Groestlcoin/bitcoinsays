@@ -85,14 +85,22 @@
             display: inline-block;
             vertical-align: bottom;
         }
+        .raw-text {
+            background: rgb(40, 44, 52);
+            color: rgb(171, 178, 190);
+            font-family: 'Fira Mono', monospace;
+            font-size: 1rem;
+            margin: 1rem 0;
+            padding: 2em;
+        }
         code {
             background: rgb(40, 44, 52);
-            border: 1px solid #333;
             color: rgb(171, 178, 190);
             display: block;
             font-family: 'Fira Mono', monospace;
             font-size: 0.6rem;
             max-width: 100%;
+            margin: 1rem 0;
             overflow: scroll;
             padding: 2em;
         }
@@ -133,6 +141,9 @@
         <h1></h1>
         <div></div>
         <p><a href="http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html">Learn more about hidden messages in the blockchain</a></p>
+        <h2>Raw text</h2>
+        <div class="raw-text"></div>
+        <h2>Api response</h2>
         <pre><code></code></pre>
     </section>
     <section class="form">
@@ -219,6 +230,8 @@
             }
 
             function renderMessages (messageHexes) {
+                var rawText = messageHexes.reduce((a, b) => a + hex2a(b), '');
+                document.querySelector('.raw-text').append(rawText);
                 messageHexes.forEach(function (message, i) {
                     var messageString = hex2a(message);
                     var outputUrl = [window.location.origin, transactionHash, outputNo || i].join('/');
