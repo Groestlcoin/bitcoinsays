@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang=en>
+<head>
+    <meta charset=utf-8>
+    <title>Bitcoin says</title>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Fira+Mono|Merriweather">
+    <style>
+        body {
+            background-color: #fff;
+            color: #0d579b;
+            font-family: 'Merriweather', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        a:link,
+        a:visited {
+            color: #ee9209;
+            text-decoration: none;
+        }
+        a:hover,
+        a:focus,
+        a:active {
+            text-decoration: underline;
+        }
+        header {
+            background-color: #0d579b;
+            color: #fff;
+            font-weight: bold;
+            letter-spacing: 0.07em;
+            padding: 3em;
+            margin-bottom: -3em;
+        }
+        header a:link,
+        header a:visited {
+            color: #fff;
+        }
+        .form p {
+            margin-top: 3rem;
+        }
+        form,
+        fieldset {
+            border: none;
+            padding: 0;
+        }
+        legend {
+            display: none;
+        }
+        label span {
+            display: none;
+        }
+        input,
+        button {
+            font-size: 2rem;
+        }
+        input {
+            border: 1px solid #666;
+        }
+        button {
+            background-color: #ee9209;
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+        }
+        section {
+            padding: 3em;
+        }
+        h1 {
+            font-size: 1rem;
+        }
+        code {
+            background: rgb(40, 44, 52);
+            border: 1px solid #333;
+            color: rgb(171, 178, 190);
+            display: block;
+            font-family: 'Fira Mono', monospace;
+            font-size: 0.6rem;
+            max-width: 100%;
+            overflow: scroll;
+            padding: 2em;
+        }
+        small {
+            display: block;
+            margin: 3rem;
+        }
+        body *:not(h1) {
+            opacity: 0;
+        }
+        body.has-transaction .form,
+        body.no-transaction .transaction {
+            display: none;
+        }
+        body.loaded * {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <header><a href="/">The Bitcoin blockchain says&hellip;</a></header>
+    <section class="transaction">
+        <h1></h1>
+        <div></div>
+        <p><a href="http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html">Learn more about hidden messages in the blockchain</a></p>
+        <pre><code></code></pre>
+    </section>
+    <section class="form">
+        <p>Search for a transaction to see any associated messages</p>
+        <form action="#" method="get">
+            <fieldset>
+                <legend>Find transaction</legend>
+                <label>
+                    <span>Transaction</span>
+                    <input placeholder="Transaction id/hash" />
+                </label>
+                <p>Example: 8881a937a437ff6ce83be3a89d77ea88ee12315f37f7ef0dd3742c30eef92dba</p>
+                <button>Search</button>
+            </fieldset>
+        </form>
+        <p><a href="http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html">Learn more about hidden messages in the blockchain</a></p>
+    </section>
+    <small>&copy; bitcoinsays.com 2017. Donate <a href="15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6.png" target="_blank" rel="nofollow noreferrer">15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6</a></small>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.1/fetch.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+    <script src="/fittext.js"></script>
+    <script>
+        (function () {
+            var pathnames = window.location.pathname.split('/');
+            var transactionHash = pathnames[1];
+            var outputNo = pathnames[2];
+            var back = 'Transaction:' + transactionHash + ' <a href="/' + transactionHash + '">¶</a>';
+            document.querySelector('h1').innerHTML = back;
+
+            function hex2a(hex) {
+                var str = '';
+                for (var i = 0; i < hex.length; i += 2) str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+                return str;
+            }
+
+            function showError() {
+                var p = document.createElement('p');
+                p.innerHTML = 'You have made too many requests. Please wait and then try again later';
+                document.querySelector('div').append(p);
+                document.body.classList.add('loaded');
+            }
+
+            function renderData(json) {
+                var clone = _.cloneDeep(json.data);
+                clone.txid = '<a href=\'https://blockchain.info/tx/' + clone.txid + '\'>' + clone.txid + '</a>';
+                clone.outputs = clone.outputs.map(function (output) {
+                    return Object.assign({}, output, { address: '<a href=\'https://blockchain.info/address/' + output.address + '\'>' + output.address + '</a>' });
+                });
+                document.querySelector('code').innerHTML = JSON.stringify(clone, null, 4);
+                return Promise.resolve(json.data);
+            }
+
+            function getHashes (data) {
+                var outputs = [].concat(outputNo ? data.outputs[outputNo] : data.outputs);
+                var gettingHashes = outputs.map(function (output) {
+                    return output.script.split(' ')[2]
+                });
+                return Promise.resolve(gettingHashes);
+            }
+
+            function renderMessages (messageHexes) {
+                messageHexes.forEach(function (message, i) {
+                    var messageString = hex2a(message);
+                    var outputUrl = [window.location.origin, transactionHash, outputNo || i].join('/');
+                    var p = document.createElement('p');
+                    p.innerHTML = messageString + ' <a href="' + outputUrl + '">¶</a>';
+                    document.querySelector('div').append(p);
+                });
+                if (outputNo) {
+                    window.fitText( document.querySelector('div') );
+                }
+                document.body.classList.add('loaded')
+            }
+
+            var url = 'https://chain.so/api/v2/get_tx_outputs/BTC/' + transactionHash;
+            var myRequest = new Request(url, {
+                url: url,
+                mode: 'cors'
+            });
+
+            if (transactionHash) {
+                document.body.classList.add('has-transaction');
+                fetch(myRequest)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(renderData)
+                .then(getHashes)
+                .then(renderMessages)
+                .catch(function (err) {
+                    showError();
+                    console.log(err);
+                });
+            } else {
+                document.querySelector('form').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    window.location = [window.location.origin, document.querySelector('input').value].join('/');
+                }, false);
+                document.body.classList.add('no-transaction', 'loaded');
+            }
+
+        }())
+    </script>
+</body>
