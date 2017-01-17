@@ -216,7 +216,6 @@
             document.querySelector('.donate').addEventListener('click', function (e) { e.preventDefault(); }, false);
             var clipboard = new Clipboard('.donate');
             clipboard.on('success', function(e) {
-                console.info('Text:', e.text);
                 var copied = document.querySelector('.copied');
                 copied.classList.add('visible');
                 setTimeout(function () {
