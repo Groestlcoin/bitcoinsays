@@ -174,11 +174,30 @@
                 return str;
             }
 
-            function showError() {
+            function showRateLimitError() {
                 var p = document.createElement('p');
-                p.innerHTML = 'You have made too many requests. Please wait and then try again later';
+                p.innerHTML = 'There’s <a href="https://chain.so/api#rate-limits">a limit</a> to ' +
+                    'how quickly we can look up transactions, ' +
+                    'and it looks like we hit it. ' +
+                    'It will work again in a moment. ' +
+                    'You can help stop this happening by donating to the bitcoin wallet in the footer 😉';
                 document.querySelector('div').append(p);
                 document.body.classList.add('loaded');
+            }
+
+            function showDefaultError() {
+                var p = document.createElement('p');
+                p.innerHTML = 'There’s a problem fetching the transaction. Maybe try a different one';
+                document.querySelector('div').append(p);
+                document.body.classList.add('loaded');
+            }
+
+            function handleFetchError (response) {
+                if (!response.ok) {
+                    const status = response.status;
+                    return Promise.reject(status);
+                }
+                return response;
             }
 
             function renderData(json) {
@@ -232,16 +251,21 @@
             if (transactionHash) {
                 document.body.classList.add('has-transaction');
                 fetch(myRequest)
-                .then(function (response) {
-                    return response.json();
-                })
-                .then(renderData)
-                .then(getHashes)
-                .then(renderMessages)
-                .catch(function (err) {
-                    showError();
-                    console.log(err);
-                });
+                    .then(handleFetchError)
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(renderData)
+                    .then(getHashes)
+                    .then(renderMessages)
+                    .catch(function (err) {
+                        if (err === 404) {
+                            showDefaultError();
+                        } else {
+                            showRateLimitError();
+                        }
+                        console.error(err);
+                    });
             } else {
                 document.querySelector('form').addEventListener('submit', function (e) {
                     e.preventDefault();
