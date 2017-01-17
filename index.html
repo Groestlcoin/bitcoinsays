@@ -2,6 +2,7 @@
 <html lang=en>
 <head>
     <meta charset=utf-8>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,shrink-to-fit=no" />
     <title>Bitcoin says</title>
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Fira+Mono|Merriweather">
     <style>
@@ -40,6 +41,7 @@
         form,
         fieldset {
             border: none;
+            min-width: 0;
             padding: 0;
         }
         legend {
@@ -50,10 +52,15 @@
         }
         input,
         button {
-            font-size: 2rem;
+            font-size: 1rem;
         }
         input {
             border: 1px solid #666;
+            display: inline-block;
+            max-width: 40rem;
+            overflow: hidden;
+            width: 100%;
+            margin-bottom: 1rem;
         }
         button {
             background-color: #ee9209;
@@ -65,7 +72,18 @@
             padding: 3em;
         }
         h1 {
-            font-size: 1rem;
+            font-size: 2rem;
+        }
+        h1 .transaction-hash,
+        .example {
+            max-width: 80%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        h1 .transaction-hash {
+            display: inline-block;
+            vertical-align: bottom;
         }
         code {
             background: rgb(40, 44, 52);
@@ -78,9 +96,16 @@
             overflow: scroll;
             padding: 2em;
         }
-        small {
+        footer {
             display: block;
             margin: 3rem;
+        }
+        footer small {
+            display: block;
+            margin-bottom: 1rem;
+        }
+        #donate {
+            opacity: 0;
         }
         body *:not(h1) {
             opacity: 0;
@@ -91,6 +116,14 @@
         }
         body.loaded * {
             opacity: 1;
+        }
+        body.loaded .copied {
+            opacity: 0;
+            transition: opacity 3s;
+        }
+        body.loaded .copied.visible {
+            opacity: 1;
+            transition: opacity 0.5s;
         }
     </style>
 </head>
@@ -111,22 +144,28 @@
                     <span>Transaction</span>
                     <input placeholder="Transaction id/hash" />
                 </label>
-                <p>Example: 8881a937a437ff6ce83be3a89d77ea88ee12315f37f7ef0dd3742c30eef92dba</p>
                 <button>Search</button>
+                <p class="example">Example: 8881a937a437ff6ce83be3a89d77ea88ee12315f37f7ef0dd3742c30eef92dba</p>
             </fieldset>
         </form>
         <p><a href="http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html">Learn more about hidden messages in the blockchain</a></p>
     </section>
-    <small>&copy; bitcoinsays.com 2017. Donate <a href="15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6.png" target="_blank" rel="nofollow noreferrer">15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6</a></small>
+    <footer>
+        <small>QR Icon made by <a href="http://www.flaticon.com/authors/dave-gandy" title="Dave Gandy">Dave Gandy</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></small>
+        <small>&copy; bitcoinsays.com 2017. Donate <a class="donate" data-clipboard-target="#donate" href="/15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6.png" target="_blank" rel="nofollow noreferrer">15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6</a> <span class="copied"> Copied!<span></small>
+        <a class="qr-code" href="/15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6.png" target="_blank" rel="nofollow noreferrer"><img src="/qr-code.png" alt="QR code" title="" width="32px" height="32px" /></a>
+        <input id="donate" value="15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6" />
+    </footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.1/fetch.min.js"></script>
     <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.16/clipboard.min.js"></script>
     <script src="/fittext.js"></script>
     <script>
         (function () {
             var pathnames = window.location.pathname.split('/');
             var transactionHash = pathnames[1];
             var outputNo = pathnames[2];
-            var back = 'Transaction:' + transactionHash + ' <a href="/' + transactionHash + '">¶</a>';
+            var back = 'Transaction: <span class="transaction-hash">' + transactionHash + ' </span><a href="/' + transactionHash + '">¶</a>';
             document.querySelector('h1').innerHTML = back;
 
             function hex2a(hex) {
@@ -173,6 +212,17 @@
                 }
                 document.body.classList.add('loaded')
             }
+
+            document.querySelector('.donate').addEventListener('click', function (e) { e.preventDefault(); }, false);
+            var clipboard = new Clipboard('.donate');
+            clipboard.on('success', function(e) {
+                console.info('Text:', e.text);
+                var copied = document.querySelector('.copied');
+                copied.classList.add('visible');
+                setTimeout(function () {
+                    copied.classList.remove('visible');
+                }, 3000);
+            });
 
             var url = 'https://chain.so/api/v2/get_tx_outputs/BTC/' + transactionHash;
             var myRequest = new Request(url, {
