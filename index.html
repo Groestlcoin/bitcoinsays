@@ -85,13 +85,12 @@
             display: inline-block;
             vertical-align: bottom;
         }
-        .raw-text {
-            background: rgb(40, 44, 52);
-            color: rgb(171, 178, 190);
+        div p {
+            white-space: pre-wrap;
+        }
+        div p:not(:only-child) {
             font-family: 'Fira Mono', monospace;
-            font-size: 1rem;
-            margin: 1rem 0;
-            padding: 2em;
+            margin: 0.2rem 0;
         }
         code {
             background: rgb(40, 44, 52);
@@ -140,9 +139,8 @@
     <section class="transaction">
         <h1></h1>
         <div></div>
+        <pre class="output-script"></pre>
         <p><a href="http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html">Learn more about hidden messages in the blockchain</a></p>
-        <h2>Raw text</h2>
-        <pre class="raw-text"></pre>
         <h2>Api response</h2>
         <pre><code></code></pre>
     </section>
@@ -212,38 +210,26 @@
                 return response;
             }
 
-            function renderData(json) {
-                var clone = _.cloneDeep(json.data);
+
+            function renderOutputScript (data) {
+                var outputs = [].concat(outputNo ? data.outputs[outputNo] : data.outputs);
+                var decodedOutputScripts = outputs.reduce(function (a, b, i) {
+                    var messageString = hex2a(b.script);
+                    var outputUrl = [window.location.origin, transactionHash, outputNo || i].join('/');
+                    return a + '<p>' + messageString + ' <a href="' + outputUrl + '">¶</a></p>';
+                }, '');
+                document.querySelector('div').innerHTML = decodedOutputScripts;
+                return data;
+            }
+
+            function renderData(data) {
+                var clone = _.cloneDeep(data);
                 clone.txid = '<a href=\'https://blockchain.info/tx/' + clone.txid + '\'>' + clone.txid + '</a>';
                 clone.outputs = clone.outputs.map(function (output) {
                     return Object.assign({}, output, { address: '<a href=\'https://blockchain.info/address/' + output.address + '\'>' + output.address + '</a>' });
                 });
                 document.querySelector('code').innerHTML = JSON.stringify(clone, null, 4);
-                return Promise.resolve(json.data);
-            }
-
-            function getHashes (data) {
-                var outputs = [].concat(outputNo ? data.outputs[outputNo] : data.outputs);
-                var gettingHashes = outputs.map(function (output) {
-                    return output.script.split(' ')[2]
-                });
-                return Promise.resolve(gettingHashes);
-            }
-
-            function renderRichText (messageHexes) {
-                var richText = messageHexes.reduce(function (a, b, i) {
-                    var messageString = hex2a(b);
-                    var outputUrl = [window.location.origin, transactionHash, outputNo || i].join('/');
-                    return a + '<p>' + messageString + ' <a href="' + outputUrl + '">¶</a></p>';
-                }, '');
-                document.querySelector('div').innerHTML = richText;
-                return messageHexes;
-            }
-
-            function renderRawText (messageHexes) {
-                var rawText = messageHexes.reduce(function (a, b) { return a + hex2a(b) + '\n'; }, '');
-                document.querySelector('.raw-text').append(rawText);
-                return messageHexes;
+                return data;
             }
 
             function setUpDom () {
@@ -266,7 +252,7 @@
             if (transactionHash) {
                 document.body.classList.add('has-transaction');
 
-                var url = 'https://chain.so/api/v2/get_tx_outputs/BTC/' + transactionHash;
+                var url = 'https://chain.so/api/v2/get_tx/BTC/' + transactionHash;
                 var myRequest = new Request(url, {
                     url: url,
                     mode: 'cors'
@@ -274,12 +260,10 @@
                 fetch(myRequest)
                     .then(handleFetchError)
                     .then(function (response) {
-                        return response.json();
+                        return response.json().then(function (json) { return json.data });
                     })
+                    .then(renderOutputScript)
                     .then(renderData)
-                    .then(getHashes)
-                    .then(renderRichText)
-                    .then(renderRawText)
                     .then(setUpDom)
                     .catch(function (err) {
                         if (err === 404) {
