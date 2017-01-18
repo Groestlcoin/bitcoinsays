@@ -142,7 +142,7 @@
         <div></div>
         <p><a href="http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html">Learn more about hidden messages in the blockchain</a></p>
         <h2>Raw text</h2>
-        <div class="raw-text"></div>
+        <pre class="raw-text"></pre>
         <h2>Api response</h2>
         <pre><code></code></pre>
     </section>
@@ -156,7 +156,7 @@
                     <input placeholder="Transaction id/hash" />
                 </label>
                 <button>Search</button>
-                <p class="example">Example: 8881a937a437ff6ce83be3a89d77ea88ee12315f37f7ef0dd3742c30eef92dba</p>
+                <p class="example">Example: 930a2114cdaa86e1fac46d15c74e81c09eee1d4150ff9d48e76cb0697d8e1d72</p>
             </fieldset>
         </form>
         <p><a href="http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html">Learn more about hidden messages in the blockchain</a></p>
@@ -181,6 +181,7 @@
 
             function hex2a(hex) {
                 var str = '';
+                if (!hex) return str;
                 for (var i = 0; i < hex.length; i += 2) str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
                 return str;
             }
@@ -229,40 +230,47 @@
                 return Promise.resolve(gettingHashes);
             }
 
-            function renderMessages (messageHexes) {
-                var rawText = messageHexes.reduce((a, b) => a + hex2a(b), '');
-                document.querySelector('.raw-text').append(rawText);
-                messageHexes.forEach(function (message, i) {
-                    var messageString = hex2a(message);
+            function renderRichText (messageHexes) {
+                var richText = messageHexes.reduce(function (a, b, i) {
+                    var messageString = hex2a(b);
                     var outputUrl = [window.location.origin, transactionHash, outputNo || i].join('/');
-                    var p = document.createElement('p');
-                    p.innerHTML = messageString + ' <a href="' + outputUrl + '">¶</a>';
-                    document.querySelector('div').append(p);
-                });
+                    return a + '<p>' + messageString + ' <a href="' + outputUrl + '">¶</a></p>';
+                }, '');
+                document.querySelector('div').innerHTML = richText;
+                return messageHexes;
+            }
+
+            function renderRawText (messageHexes) {
+                var rawText = messageHexes.reduce(function (a, b) { return a + hex2a(b) + '\n'; }, '');
+                document.querySelector('.raw-text').append(rawText);
+                return messageHexes;
+            }
+
+            function setUpDom () {
                 if (outputNo) {
                     window.fitText( document.querySelector('div') );
                 }
                 document.body.classList.add('loaded')
+
+                document.querySelector('.donate').addEventListener('click', function (e) { e.preventDefault(); }, false);
+                var clipboard = new Clipboard('.donate');
+                clipboard.on('success', function(e) {
+                    var copied = document.querySelector('.copied');
+                    copied.classList.add('visible');
+                    setTimeout(function () {
+                        copied.classList.remove('visible');
+                    }, 3000);
+                });
             }
-
-            document.querySelector('.donate').addEventListener('click', function (e) { e.preventDefault(); }, false);
-            var clipboard = new Clipboard('.donate');
-            clipboard.on('success', function(e) {
-                var copied = document.querySelector('.copied');
-                copied.classList.add('visible');
-                setTimeout(function () {
-                    copied.classList.remove('visible');
-                }, 3000);
-            });
-
-            var url = 'https://chain.so/api/v2/get_tx_outputs/BTC/' + transactionHash;
-            var myRequest = new Request(url, {
-                url: url,
-                mode: 'cors'
-            });
 
             if (transactionHash) {
                 document.body.classList.add('has-transaction');
+
+                var url = 'https://chain.so/api/v2/get_tx_outputs/BTC/' + transactionHash;
+                var myRequest = new Request(url, {
+                    url: url,
+                    mode: 'cors'
+                });
                 fetch(myRequest)
                     .then(handleFetchError)
                     .then(function (response) {
@@ -270,7 +278,9 @@
                     })
                     .then(renderData)
                     .then(getHashes)
-                    .then(renderMessages)
+                    .then(renderRichText)
+                    .then(renderRawText)
+                    .then(setUpDom)
                     .catch(function (err) {
                         if (err === 404) {
                             showDefaultError();
