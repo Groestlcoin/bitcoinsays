@@ -4,9 +4,9 @@ bitcoinsays.com decodes bitcoin addresses to reveal the [hidden messages](http:/
 
 We spit the location pathname and take the 1st string as the transaction ID, and if here is one, the 2nd string as the output to highlight.
 
-We use the transaction ID to fetch the transaction outputs using the [SoChain API](https://chain.so/api).
+We use the transaction ID to fetch the transaction using the [SoChain API](https://chain.so/api).
 
-Once we have that, we get the addresses and their hex equivalents from the outputs. We then convert the hex to ascii to see if there is a message hidden there.
+Once we have that, we get the output scripts. We then convert the hex to ascii to see if there is a message hidden there.
 
 If no output index was specified, we show them all, if there is one specified we highlight the decoded strings from that output.
 
