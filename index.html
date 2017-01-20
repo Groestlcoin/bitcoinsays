@@ -258,6 +258,15 @@
             function renderData(data) {
                 var clone = _.cloneDeep(data);
                 clone.txid = '<a href=\'https://blockchain.info/tx/' + clone.txid + '\'>' + clone.txid + '</a>';
+                clone.blockhash = '<a href=\'https://blockchain.info/block-index/' + clone.blockhash + '\'>' + clone.blockhash + '</a>';
+                clone.inputs = clone.inputs.map(function (input) {
+                    return _.merge({}, input, {
+                        from_output: {
+                            txid: '<a href=\'https://blockchain.info/tx/' + input.from_output.txid + '\'>' + input.from_output.txid + '</a>',
+                        },
+                        address: '<a href=\'https://blockchain.info/address/' + input.address + '\'>' + input.address + '</a>'
+                    });
+                });
                 clone.outputs = clone.outputs.map(function (output) {
                     return Object.assign({}, output, { address: '<a href=\'https://blockchain.info/address/' + output.address + '\'>' + output.address + '</a>' });
                 });
