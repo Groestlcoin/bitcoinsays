@@ -52,21 +52,24 @@
         }
         input,
         button {
-            font-size: 1rem;
+            box-sizing: border-box;
+            font-size: 2rem;
+            padding: 0.5rem;
         }
         input {
             border: 1px solid #666;
             display: inline-block;
+            margin-bottom: 1rem;
             max-width: 40rem;
             overflow: hidden;
             width: 100%;
-            margin-bottom: 1rem;
         }
         button {
             background-color: #ee9209;
-            color: #fff;
             border: none;
             border-radius: 0.5rem;
+            color: #fff;
+            transition: opacity 0.5s;
         }
         section {
             padding: 3em;
@@ -124,6 +127,9 @@
         body.loaded * {
             opacity: 1;
         }
+        body.loaded button:disabled {
+            opacity: 0.4;
+        }
         body.loaded .copied {
             opacity: 0;
             transition: opacity 3s;
@@ -146,24 +152,50 @@
     </section>
     <section class="form">
         <p>Search for a transaction to see any associated messages</p>
-        <form action="#" method="get">
+        <form
+            action="#"
+            method="get">
             <fieldset>
                 <legend>Find transaction</legend>
                 <label>
                     <span>Transaction</span>
                     <input placeholder="Transaction id/hash" />
                 </label>
-                <button>Search</button>
+                <button disabled="disabled">Search</button>
                 <p class="example">Example: 930a2114cdaa86e1fac46d15c74e81c09eee1d4150ff9d48e76cb0697d8e1d72</p>
             </fieldset>
         </form>
         <p><a href="http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html">Learn more about hidden messages in the blockchain</a></p>
     </section>
     <footer>
-        <small>QR Icon made by <a href="http://www.flaticon.com/authors/dave-gandy" title="Dave Gandy">Dave Gandy</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></small>
-        <small>&copy; bitcoinsays.com 2017. Donate <a class="donate" data-clipboard-target="#donate" href="https://blockchain.info/address/15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6" target="_blank" rel="nofollow noreferrer">15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6</a> <span class="copied"> Copied!<span></small>
-        <a class="qr-code" href="https://blockchain.info/address/15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6" target="_blank" rel="nofollow noreferrer"><img src="/qr-code.png" alt="QR code" title="" width="32px" height="32px" /></a>
-        <input id="donate" value="15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6" />
+        <small>QR Icon made by <a
+            href="http://www.flaticon.com/authors/dave-gandy"
+            title="Dave Gandy">Dave Gandy</a> from <a
+                href="http://www.flaticon.com"
+                title="Flaticon">www.flaticon.com</a> is licensed by <a
+                    href="http://creativecommons.org/licenses/by/3.0/"
+                    title="Creative Commons BY 3.0"
+                    target="_blank"
+                    rel="nofollow noreferrer">CC 3.0 BY</a></small>
+        <small>&copy; bitcoinsays.com 2017. Donate <a
+            class="donate"
+            data-clipboard-target="#donate"
+            href="https://blockchain.info/address/15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6"
+            target="_blank"
+            rel="nofollow noreferrer">15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6</a> <span class="copied"> Copied!<span></small>
+        <a
+            class="qr-code"
+            href="https://blockchain.info/address/15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6"
+            target="_blank"
+            rel="nofollow noreferrer"><img
+                src="/qr-code.png"
+                alt="QR code"
+                title=""
+                width="32px"
+                height="32px" /></a>
+        <input
+            id="donate"
+            value="15fGpui3fMEWDrPzttm5JudCeWr8Cm1Fm6" />
     </footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.1/fetch.min.js"></script>
     <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
@@ -171,10 +203,11 @@
     <script src="/fittext.js"></script>
     <script>
         (function () {
+            var txidRegex = /[a-fA-F0-9]{64}/;
             var pathnames = window.location.pathname.split('/');
-            var transactionHash = pathnames[1];
-            var outputNo = pathnames[2];
-            var back = 'Transaction: <span class="transaction-hash">' + transactionHash + ' </span><a href="/' + transactionHash + '">¶</a>';
+            var transactionHash = pathnames[1] && pathnames[1].match(txidRegex);
+            var outputNo = transactionHash && pathnames[2];
+            var back = transactionHash && 'Transaction: <span class="transaction-hash">' + transactionHash + ' </span><a href="/' + transactionHash + '">¶</a>';
             document.querySelector('h1').innerHTML = back;
 
             function hex2a(hex) {
@@ -280,10 +313,28 @@
                         console.error(err);
                     });
             } else {
-                document.querySelector('form').addEventListener('submit', function (e) {
+                var form = document.querySelector('form');
+                var formInput = form.querySelector('input');
+                var formButton = form.querySelector('button');
+
+                formInput.addEventListener('input', function (e) {
                     e.preventDefault();
-                    window.location = [window.location.origin, document.querySelector('input').value].join('/');
+                    var inputValue = formInput.value;
+                    if (inputValue.match(txidRegex)) {
+                        formButton.removeAttribute('disabled');
+                    } else {
+                        formButton.setAttribute('disabled', 'disabled');
+                    }
                 }, false);
+
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    var inputValue = formInput.value;
+                    if (inputValue.match(txidRegex)) {
+                        window.location = [window.location.origin, inputValue].join('/');
+                    }
+                }, false);
+
                 document.body.classList.add('no-transaction', 'loaded');
             }
 
