@@ -233,8 +233,14 @@
             }
 
             function setUpDom () {
+                var messageElem;
+                var messageText;
+                var noWhiteSpace;
                 if (outputNo) {
-                    window.fitText( document.querySelector('div') );
+                    messageElem = document.querySelector('div');
+                    messageText = messageElem.innerText.trim().slice(1, -2);
+                    noWhiteSpace = messageText.indexOf(' ') === -1;
+                    window.fitText( messageElem, noWhiteSpace && 1.4);
                 }
                 document.body.classList.add('loaded')
 
