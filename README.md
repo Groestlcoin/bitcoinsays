@@ -1,6 +1,6 @@
 # bitcoinsays
 
-bitcoinsays.com decodes bitcoin addresses to reveal the [hidden messages](http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html) in the blockchain
+[bitcoinsays.com](https://bitcoinsays.com) decodes bitcoin addresses to reveal the [hidden messages](http://www.righto.com/2014/02/ascii-bernanke-wikileaks-photographs.html) in the blockchain
 
 We spit the location pathname and take the 1st string as the transaction ID, and if here is one, the 2nd string as the output to highlight.
 
