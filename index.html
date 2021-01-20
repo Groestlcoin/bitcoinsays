@@ -3,7 +3,7 @@
 <head>
     <meta charset=utf-8>
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,shrink-to-fit=no" />
-    <title>Bitcoin says</title>
+    <title>Groestlcoin says</title>
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Fira+Mono|Merriweather">
     <style>
         body {
@@ -141,7 +141,7 @@
     </style>
 </head>
 <body>
-    <header><a href="/">The Bitcoin blockchain says&hellip;</a></header>
+    <header><a href="/">The Groestlcoin blockchain says&hellip;</a></header>
     <section class="transaction">
         <h1></h1>
         <div></div>
@@ -257,18 +257,18 @@
 
             function renderData(data) {
                 var clone = _.cloneDeep(data);
-                clone.hash = '<a href=\'https://blockchain.info/tx/' + clone.hash + '\'>' + clone.hash + '</a>';
-                clone.block_index = '<a href=\'https://blockchain.info/block-index/' + clone.block_index + '\'>' + clone.block_index + '</a>';
+                clone.hash = '<a href=\'https://esplora.groestlcoin.org/tx/' + clone.hash + '\'>' + clone.hash + '</a>';
+                clone.block_index = '<a href=\'https://esplora.groestlcoin.org/block-height/' + clone.block_index + '\'>' + clone.block_index + '</a>';
                 clone.inputs = clone.inputs.map(function (input) {
                     return input.prev_out && input.prev_out.addr ? _.merge({}, input, {
                         prev_out: {
                             // txid: '<a href=\'https://blockchain.info/tx/' + input.prev_out.txid + '\'>' + input.from_output.txid + '</a>',
-                            addr: '<a href=\'https://blockchain.info/address/' + input.prev_out.addr + '\'>' + input.prev_out.addr + '</a>'
+                            addr: '<a href=\'https://esplora.groestlcoin.org/address/' + input.prev_out.addr + '\'>' + input.prev_out.addr + '</a>'
                         }
                     }) : input;
                 });
                 clone.out = clone.out.map(function (output) {
-                    return output.addr ? Object.assign({}, output, { addr: '<a href=\'https://blockchain.info/address/' + output.addr + '\'>' + output.addr + '</a>' }) : output;
+                    return output.addr ? Object.assign({}, output, { addr: '<a href=\'https://esplora.groestlcoin.org/address/' + output.addr + '\'>' + output.addr + '</a>' }) : output;
                 });
                 document.querySelector('code').innerHTML = JSON.stringify(clone, null, 4);
                 return data;
@@ -300,7 +300,7 @@
             if (transactionHash) {
                 document.body.classList.add('has-transaction');
 
-                var url = 'https://blockchain.info/rawtx/' + transactionHash + '?cors=true';
+                var url = 'https://esplora.groestlcoin.org/tx/' + transactionHash + '/hex';//?cors=true';
                 var myRequest = new Request(url, {
                     url: url,
                     mode: 'cors'
